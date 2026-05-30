@@ -12,7 +12,7 @@ for (i=0; i < FileList.length; i++) {
 
 Array.print("Found these files: \n", lst);
 
-// make output folder
+// Make output folder
 output_folder = input+"output/";
 print(output_folder);
 if (File.isDirectory(output_folder)) {
@@ -22,15 +22,17 @@ if (File.isDirectory(output_folder)) {
 }
 
 // Function to prompt Intensity choice
-function chooseIntensity() {
-	MinIntensity=80; MaxIntensity=1200;
- 	Dialog.create("LUT");
-  	Dialog.addNumber("MinIntensity:", MinIntensity);
-  	Dialog.addNumber("MaxIntensity:", MaxIntensity);
+function chooseRange(title) {
+	waitForUser("Find a range, the hit okay when satisfied with range");
+	Min=80; 
+	Max=1200; // Default values
+ 	Dialog.create(title);
+  	Dialog.addNumber("Min:", Min);
+  	Dialog.addNumber("Max:", Max);
   	Dialog.show();
-  	MinIntensity = Dialog.getNumber();
-  	MaxIntensity = Dialog.getNumber();
-  	return newArray(MinIntensity, MaxIntensity);
+  	Min = Dialog.getNumber();
+  	Max = Dialog.getNumber();
+  	return newArray(Min, Max);
 }
 
 // Start processing
@@ -49,16 +51,16 @@ for (file=0; file<lst.length; file++) { // Iterate over movie list
 	defaultValue = 1; // sets default value to 1
 	run("Split Channels");
 	
-	// select movie based on name and channel suffix: i.e. C1-[movie name]
+	// Select movie based on name and channel suffix: i.e. C1-[movie name]
 	selectImage("C1-"+name+".nd2");
 	Stack.setPosition(1,1,round(frames/2)); // Go to middle slice
 	
-	if (i == 1) {
+	if (file == 0) {
 		// Check intensity values for Channel #1
 		run("Brightness/Contrast...");
-		waitForUser("Check your intensity thresholds and be ready to input them");
-		C1_intensity_min = getNumber("Input minimum intensity for channel 1", defaultValue);
-		C1_intensity_max = getNumber("Input maximum intensity for channel 2", defaultValue);
+		C1_intensities = chooseRange("Channel 1 Intensity");
+		C1_intensity_min = C1_intensities[0];
+		C1_intensity_max = C1_intensities[1];
 		close("B&C");
 		selectImage("C1-"+name+".nd2");
 		setMinAndMax(C1_intensity_min, C1_intensity_max);
@@ -68,15 +70,16 @@ for (file=0; file<lst.length; file++) { // Iterate over movie list
 		setMinAndMax(C1_intensity_min, C1_intensity_max);
 	}
 	
+	// Repeat for channel 2
 	selectImage("C2-"+name+".nd2");
-	Stack.setPosition(1,1,round(frames/2);) // Go to middle slice
+	Stack.setPosition(1,1,round(frames/2)); // Go to middle slice
 	
-	if (i == 1) {
+	if (file == 0) {
 		// Check intensity values for Channel #2
 		run("Brightness/Contrast...");
-		waitForUser("Check your intensity thresholds and be ready to input them");
-		C2_intensity_min = getNumber("Input minimum intensity for channel 2", defaultValue);
-		C2_intensity_max = getNumber("Input maximum intensity for channel 2", defaultValue);
+		C2_intensities = chooseRange("Channel 2 Intensity");
+		C2_intensity_min = C2_intensities[0];
+		C2_intensity_max = C2_intensities[1];
 		close("B&C");
 		selectImage("C2-"+name+".nd2");
 		setMinAndMax(C2_intensity_min, C2_intensity_max);
@@ -88,14 +91,16 @@ for (file=0; file<lst.length; file++) { // Iterate over movie list
 	
 	// Make the number of slices that you cut user definable
 	waitForUser("Find a range of in-focus frames: you should use the same frames selected for NIS analysis");
-	frame1 = getNumber("prompt", defaultValue);
-	frame2 = getNumber("prompt", defaultValue);
+	frame1 = getNumber("Lowest frame", defaultValue);
+	frame2 = getNumber("Highest frame", defaultValue);
 	run("Duplicate...", "duplicate slices="+frame1+"-"+frame2);	
 	
 	//MIP
-	run("Merge Channels...", "c1=C1-"+name+" c2=C2-"+name+" create");
+	run("Merge Channels...", "c1=C1-"+name+".nd2 c2=C2-"+name+".nd2 create");
 	run("Z Project...", "projection=[Max Intensity]");
 	
+	// Save Maximum Intensity Projection images
 	saveAs("png", output_folder + "/MIP_"+name);
+	close("*");
 }
 
