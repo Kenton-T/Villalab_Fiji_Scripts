@@ -22,11 +22,14 @@ if (File.isDirectory(output_folder)) {
 }
 
 // Function to prompt Intensity choice
-function chooseRange(title) {
-	waitForUser("Find a range, the hit okay when satisfied with range");
+function chooseRange(title, message) {
+	// Default values
 	Min=80; 
-	Max=1200; // Default values
+	Max=1200; 
+	
+	// GUI elements
  	Dialog.create(title);
+ 	Dialog.addMessage(message);
   	Dialog.addNumber("Min:", Min);
   	Dialog.addNumber("Max:", Max);
   	Dialog.show();
@@ -58,12 +61,14 @@ for (file=0; file<lst.length; file++) { // Iterate over movie list
 	if (file == 0) {
 		// Check intensity values for Channel #1
 		run("Brightness/Contrast...");
-		C1_intensities = chooseRange("Channel 1 Intensity");
+		C1_intensities = chooseRange("Channel 1 Intensity", "Input a range of intensity values based on the brightest image.");
 		C1_intensity_min = C1_intensities[0];
 		C1_intensity_max = C1_intensities[1];
 		close("B&C");
 		selectImage("C1-"+name+".nd2");
 		setMinAndMax(C1_intensity_min, C1_intensity_max);
+		
+		print("Setting channel 1 range to"+C1_intensity_min+"-"+C1_intensity_max);
 	}
 	else {
 		selectImage("C1-"+name+".nd2");
@@ -77,12 +82,14 @@ for (file=0; file<lst.length; file++) { // Iterate over movie list
 	if (file == 0) {
 		// Check intensity values for Channel #2
 		run("Brightness/Contrast...");
-		C2_intensities = chooseRange("Channel 2 Intensity");
+		C2_intensities = chooseRange("Channel 2 Intensity", "Input a range of intensity values based on the brightest image.");
 		C2_intensity_min = C2_intensities[0];
 		C2_intensity_max = C2_intensities[1];
 		close("B&C");
 		selectImage("C2-"+name+".nd2");
 		setMinAndMax(C2_intensity_min, C2_intensity_max);
+		
+		print("Setting channel 2 range to"+C2_intensity_min+"-"+C2_intensity_max);
 	}
 	else {
 		selectImage("C2-"+name+".nd2");
@@ -90,9 +97,14 @@ for (file=0; file<lst.length; file++) { // Iterate over movie list
 	}
 	
 	// Make the number of slices that you cut user definable
-	waitForUser("Find a range of in-focus frames: you should use the same frames selected for NIS analysis");
-	frame1 = getNumber("Lowest frame", defaultValue);
-	frame2 = getNumber("Highest frame", defaultValue);
+	frame_range = chooseRange("Select the range of frames", "Input the range of frames used for this movie in your NIS-Elements analysis.");
+	frame1 = frame_range[0];
+	frame2 = frame_range[1];
+	
+//	waitForUser("Find a range of in-focus frames: you should use the same frames selected for NIS analysis");
+//	frame1 = getNumber("Lowest frame", defaultValue);
+//	frame2 = getNumber("Highest frame", defaultValue);
+	
 	run("Duplicate...", "duplicate slices="+frame1+"-"+frame2);	
 	
 	//MIP
@@ -104,3 +116,6 @@ for (file=0; file<lst.length; file++) { // Iterate over movie list
 	close("*");
 }
 
+
+selectWindow("Log");
+saveAs("Text", output_folder+"log.txt");
