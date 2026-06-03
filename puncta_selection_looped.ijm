@@ -23,18 +23,14 @@ function containing(array, value) {
 
 // open the file
 input = getDirectory("Input folder for images"); //get input folder
-FileList = getFileList(input); //get list of files
-rm = newArray(0);
-for (i = 0; i < FileList.length; i++) { // handles exception if this script is run in a directory where the output folder already exists
-	if (File.isDirectory(input + FileList[i]) == true) {
-		rm = Array.concat(rm, FileList[i]);
+lst = getFileList(input); //get list of files
+FileList = newArray(0); 
+for (i=0; i < lst.length; i++) {
+	if (endsWith(FileList[i], ".nd2") == true) {
+		FileList = Array.concat(FileList, lst[i]);
 	}
-} // can probably make this script a bit more robust by checking if the file extension is actually .nd2
-for (i = 0; i < rm.length; i++) {
-	FileList = Array.deleteValue(FileList, rm[i]);
 }
-print("Found these files: ");
-Array.print(FileList); // no function exists to combine a string and array into a single print function (??)
+Array.print("Found these files: \n", lst);
 
 // make output folder
 output_folder = input+"output/";
@@ -46,18 +42,22 @@ if (File.isDirectory(output_folder)) {
 }
 
 for (image=0; image<FileList.length; image++) {
-	path = input + FileList[image]; //reads the images sequentially from the list
-	run("Bio-Formats Importer", "open="+path+" color_mode=Default rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT");
-	dir = File.getParent(path);
-	name = File.getNameWithoutExtension(path);
-	print("Starting the process on "+name);
+	
 	// making output subfolder
 	if (File.isDirectory(output_folder+"/"+name)) { 
 	print("Directory already made, moving on...");
 	} else {
 		File.makeDirectory(output_folder+"/"+name);
 	}
+	
+	//reads the images sequentially from the list
+	path = input + FileList[image]; 
+	run("Bio-Formats Importer", "open="+path+" color_mode=Default rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT");
+	dir = File.getParent(path);
+	name = File.getNameWithoutExtension(path);
+	print("Starting the process on "+name);
 	Stack.getDimensions(width, height, channels, slices, frames); //get total frame count
+	
 	// determining which frames to process
 	if (image == 0) {
 		if (random_selection == true) {
@@ -88,17 +88,23 @@ for (image=0; image<FileList.length; image++) {
 	for (i = 1; !(i > channels); i++) {
 		selectImage(name+".nd2");	
 		Stack.getDimensions(width, height, channels, slices, frames);
+		
 		for (n = 0; n < frame_list.length; n++) { 
 			if (!(frame_list[n] > frames)) {
+				
+				// Preprocessing
 				Stack.setPosition(i,1,frame_list[n]); 
 				roiManager("Reset"); // clears the roi manager
 				run("Clear Results"); //empties the results table 
 				run("Select None"); //makes sure there is nothing selected
 				run("Enhance Contrast...", "saturated=1.00");
-				// mask lysosomes
+				
+				// Initialize mask
 				run("Duplicate...", "title=ch"+i+".tif");
 				run("Duplicate...", "title=ch"+i+"_mask.tif");
-				if (n == 0) { //this thresholding method should hopefully be better than relying on automatic methods, which seems unreliable for our data
+				
+				//this thresholding method should hopefully be better than relying on automatic methods, which seems inconsistent for our data
+				if (n == 0) { 
 					run("Threshold...");
 					waitForUser("Adjust threshold as necessary");
 					getThreshold(lower, upper);
@@ -106,17 +112,22 @@ for (image=0; image<FileList.length; image++) {
 				} else {
 					setThreshold(lower, upper);
 				}
+				
+				// Masking
 				run("Convert to Mask");
 				wait(100);
 				// watershed
-				run("Watershed");
+				run("Watershed"); // splits particles that are too close to each other
 				wait(1500);
-				// saving an image of the watershed, delete section later
+				
+				// Saves image of watershed for quality checking
 				run("Duplicate...", "title=ch"+i+"_watershed.tif");
 				selectWindow("ch"+i+"_watershed.tif");
 				saveAs("PNG", output_folder+"/"+name+"/ch"+i+"_"+frame_list[n]+"_watershed.png");
 				close("ch"+i+"_watershed.tif");
 				close("ch"+i+"_"+frame_list[n]+"_watershed.png");
+				
+				// Collect data
 				selectWindow("ch"+i+"_mask.tif");
 				run("Analyze Particles...", "size=0.15-3 show=Outlines display clear add");
 				wait(100);
@@ -124,12 +135,14 @@ for (image=0; image<FileList.length; image++) {
 				close("Results");
 				selectWindow("ch"+i+".tif");
 				run("Hide Overlay");
-				//roiManager("Show All");
 				roiManager("Measure");
 				wait(500);
+				
+				// Saves image of picks for quality checking
 				run("Add Image...", "image=[Drawing of ch"+i+"_mask.tif] x=0 y=0 opacity=30");
 				saveAs("PNG", output_folder+"/"+name+"/ch"+i+"_"+frame_list[n]+"_mask.png");
 				saveAs("Results", output_folder+"/"+name+"/ch"+i+"_"+frame_list[n]+"_particles.txt");
+				
 				//closing files to prepare for next loop
 				close("Results");
 				close("ch"+i+".tif");
