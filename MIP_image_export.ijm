@@ -22,7 +22,7 @@ if (File.isDirectory(output_folder)) {
 }
 
 // Default values
-default_intensities = newArray(65, 1200);
+default_intensities = newArray(70, 1200);
 default_frames = newArray(2,6);
 
 // Function to prompt Intensity choice
@@ -32,7 +32,6 @@ function chooseRange(title, message, default_range) {
 	Max = default_range[1]; 
 	
 	// GUI elements
-// 	Dialog.create(title);
  	Dialog.createNonBlocking(title);
  	Dialog.addMessage(message);
   	Dialog.addNumber("Min:", Min);
@@ -129,6 +128,7 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 		close("*");
 	} else {
 		// Make the number of slices that you cut user 
+		selectImage("C1-"+name+".nd2");
 		Stack.setPosition(1,center_frame,1); // Go to middle slice
 		frame_range = chooseRange("Select the range of frames", "Input the range of frames used for this movie in your NIS-Elements analysis.", default_frames);
 		frame1 = frame_range[0];
