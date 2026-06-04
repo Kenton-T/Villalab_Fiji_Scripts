@@ -21,12 +21,12 @@ function containing(array, value) {
 	return false;
 }
 
-// open the file
+// filter out all directories/non-.nd2 files
 input = getDirectory("Input folder for images"); //get input folder
 lst = getFileList(input); //get list of files
 FileList = newArray(0); 
 for (i=0; i < lst.length; i++) {
-	if (endsWith(FileList[i], ".nd2") == true) {
+	if (endsWith(lst[i], ".nd2") == true) {
 		FileList = Array.concat(FileList, lst[i]);
 	}
 }
