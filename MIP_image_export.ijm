@@ -140,7 +140,7 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 		run("Z Project...", "projection=[Max Intensity]");
 		
 		// Save Maximum Intensity Projection images
-		saveAs("png", output_folder + "/MIP_"+name);
+		saveAs("png", output_folder + "MIP_"+name);
 		close("*");
 	}
 }
