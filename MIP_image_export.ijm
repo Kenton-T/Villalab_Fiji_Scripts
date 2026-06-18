@@ -92,55 +92,59 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 	if (file == -1) {
 		// Check intensity values for Channel #1
 		run("Brightness/Contrast...");
-		C1_intensities = chooseRange("Channel 1 Intensity", "Input a range of intensity values based on the brightest image.", default_intensities);
+		C1_intensities = chooseRange("Channel 1 Intensity", "Use the B/C window to determine an intensity range, and input those values.", default_intensities);
 		C1_intensity_min = C1_intensities[0];
 		C1_intensity_max = C1_intensities[1];
 		close("B&C");
 		selectImage("C1-"+name+".nd2");
 		setMinAndMax(C1_intensity_min, C1_intensity_max);
 		print("Setting channel 1 range to "+C1_intensity_min+"-"+C1_intensity_max);
-	} else {
-		selectImage("C1-"+name+".nd2");
-		setMinAndMax(C1_intensity_min, C1_intensity_max);
-	}
-	
-	// Repeat for channel 2
-	selectImage("C2-"+name+".nd2");
-	Stack.setPosition(1,center_frame,1); // Go to middle slice
-	
-	if (file == -1) {
-		// Check intensity values for Channel #2
+
+		// Repeat for channel 2
+		selectImage("C2-"+name+".nd2");
+		Stack.setPosition(1,center_frame,1); // Go to middle slice
+		
 		run("Brightness/Contrast...");
-		C2_intensities = chooseRange("Channel 2 Intensity", "Input a range of intensity values based on the brightest image.", default_intensities);
+		C2_intensities = chooseRange("Channel 2 Intensity", "Use the B/C window to determine an intensity range, and input those values.", default_intensities);
 		C2_intensity_min = C2_intensities[0];
 		C2_intensity_max = C2_intensities[1];
 		close("B&C");
 		selectImage("C2-"+name+".nd2");
 		setMinAndMax(C2_intensity_min, C2_intensity_max);
 		print("Setting channel 2 range to "+C2_intensity_min+"-"+C2_intensity_max);
-	} else {
-		selectImage("C2-"+name+".nd2");
-		setMinAndMax(C2_intensity_min, C2_intensity_max);
-	}
-	
-	if (file == -1) {
-		// Skip MIP - Only get intensity info for this round
 		close("*");
 	} else {
 		// Make the number of slices that you cut user 
 		selectImage("C1-"+name+".nd2");
 		Stack.setPosition(1,center_frame,1); // Go to middle slice
-		frame_range = chooseRange("Select the range of frames", "Input the range of frames used for this movie in your NIS-Elements analysis.", default_frames);
+		setMinAndMax(C1_intensity_min, C1_intensity_max);
+		wait(100);
+		frame_range = chooseRange("Select the range of frames", "Input the range of z-slices to include in your Maximum Intensity Projection", default_frames);
 		frame1 = frame_range[0];
 		frame2 = frame_range[1];
-		run("Duplicate...", "duplicate slices="+frame1+"-"+frame2);	
 		
-		//MIP
-		run("Merge Channels...", "c1=C1-"+name+".nd2 c2=C2-"+name+".nd2 create");
+		// Channel 1 MIP
+		wait(100);
+		selectImage("C1-"+name+".nd2");
+		run("Duplicate...", "title="+"C1-"+name+"_slice.nd2"+" duplicate range="+frame1+"-"+frame2);	
+		wait(100);
+		selectImage("C1-"+name+"_slice.nd2");
 		run("Z Project...", "projection=[Max Intensity]");
+		setMinAndMax(C1_intensity_min, C1_intensity_max);
+		wait(100);
+		saveAs("png", output_folder + "MIP_Ch1_"+name);
 		
-		// Save Maximum Intensity Projection images
-		saveAs("png", output_folder + "MIP_"+name);
+		// Channel 2 MIP
+		selectImage("C2-"+name+".nd2");
+		run("Duplicate...", "title="+"C2-"+name+"_slice.nd2"+" duplicate range="+frame1+"-"+frame2);
+		wait(100);
+		selectImage("C2-"+name+"_slice.nd2");
+		run("Z Project...", "projection=[Max Intensity]");
+		saveAs("png", output_folder + "MIP_Ch2_"+name);
+
+		// Merge MIP 
+		run("Merge Channels...", "c1=MIP_Ch1_"+name+".png c2=MIP_Ch2_"+name+".png create"); 
+		saveAs("png", output_folder + "MIP_merge"+name);
 		close("*");
 	}
 }
