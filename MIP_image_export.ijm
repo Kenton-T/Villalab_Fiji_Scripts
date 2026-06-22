@@ -132,7 +132,7 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 		run("Z Project...", "projection=[Max Intensity]");
 		setMinAndMax(C1_intensity_min, C1_intensity_max);
 		wait(100);
-		saveAs("png", output_folder + "MIP_Ch1_"+name);
+		saveAs("tif", output_folder + "MIP_Ch1_"+name);
 		
 		// Channel 2 MIP
 		selectImage("C2-"+name+".nd2");
@@ -140,11 +140,12 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 		wait(100);
 		selectImage("C2-"+name+"_slice.nd2");
 		run("Z Project...", "projection=[Max Intensity]");
-		saveAs("png", output_folder + "MIP_Ch2_"+name);
+		saveAs("tif", output_folder + "MIP_Ch2_"+name);
 
 		// Merge MIP 
-		run("Merge Channels...", "c1=MIP_Ch1_"+name+".png c2=MIP_Ch2_"+name+".png create"); 
-		saveAs("png", output_folder + "MIP_merge"+name);
+		run("Merge Channels...", "c1=MIP_Ch1_"+name+".tif c2=MIP_Ch2_"+name+".tif create"); 
+//		frame_range = chooseRange("test", "test", default_range);
+		saveAs("Tiff", output_folder + "MIP_merge"+name);
 		close("*");
 	}
 }
