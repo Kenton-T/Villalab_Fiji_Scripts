@@ -144,7 +144,7 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 
 		// Merge MIP 
 		run("Merge Channels...", "c1=MIP_Ch1_"+name+".tif c2=MIP_Ch2_"+name+".tif create"); 
-//		frame_range = chooseRange("test", "test", default_range);
+		run("Flatten"); // Required to compress the tiff into a single layer
 		saveAs("Tiff", output_folder + "MIP_merge"+name);
 		close("*");
 	}
