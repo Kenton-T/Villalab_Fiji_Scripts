@@ -122,6 +122,7 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 		frame_range = chooseRange("Select the range of frames", "Input the range of z-slices to include in your Maximum Intensity Projection", default_frames);
 		frame1 = frame_range[0];
 		frame2 = frame_range[1];
+		print("Doing MIP for z-slices: "+frame1+" to "+frame2);
 		
 		// Channel 1 MIP
 		wait(100);
@@ -140,12 +141,14 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 		wait(100);
 		selectImage("C2-"+name+"_slice.nd2");
 		run("Z Project...", "projection=[Max Intensity]");
+		setMinAndMax(C2_intensity_min, C2_intensity_max);
+		wait(100);
 		saveAs("tif", output_folder + "MIP_Ch2_"+name);
 
 		// Merge MIP 
 		run("Merge Channels...", "c1=MIP_Ch1_"+name+".tif c2=MIP_Ch2_"+name+".tif create"); 
 		run("Flatten"); // Required to compress the tiff into a single layer
-		saveAs("Tiff", output_folder + "MIP_merge"+name);
+		saveAs("Tiff", output_folder + "MIP_merge_"+name);
 		close("*");
 	}
 }
