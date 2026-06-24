@@ -133,9 +133,11 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 		run("Z Project...", "projection=[Max Intensity]");
 		setMinAndMax(C1_intensity_min, C1_intensity_max);
 		wait(100);
-		saveAs("tif", output_folder + "MIP_Ch1_"+name);
+		saveAs("tiff", output_folder + "MIP_Ch1_"+name+".tif");
+		wait(500);
 		
 		// Channel 2 MIP
+		wait(100);
 		selectImage("C2-"+name+".nd2");
 		run("Duplicate...", "title="+"C2-"+name+"_slice.nd2"+" duplicate range="+frame1+"-"+frame2);
 		wait(100);
@@ -143,12 +145,16 @@ for (file=-1; file<lst.length; file++) { // Iterate over movie list
 		run("Z Project...", "projection=[Max Intensity]");
 		setMinAndMax(C2_intensity_min, C2_intensity_max);
 		wait(100);
-		saveAs("tif", output_folder + "MIP_Ch2_"+name);
+		saveAs("Tiff", output_folder + "MIP_Ch2_"+name+".tif");
+		wait(500);
 
 		// Merge MIP 
 		run("Merge Channels...", "c1=MIP_Ch1_"+name+".tif c2=MIP_Ch2_"+name+".tif create"); 
+		wait(100);
 		run("Flatten"); // Required to compress the tiff into a single layer
-		saveAs("Tiff", output_folder + "MIP_merge_"+name);
+		wait(100);
+		saveAs("Tiff", output_folder + "MIP_merge_"+name+".tif");
+		wait(100);
 		close("*");
 	}
 }
